@@ -7,7 +7,10 @@ export function BarcodeGenerator() {
     //console.log(JSON.stringify(ParseInitialData(InitialProductData)))
     console.log(ProductData.Products)
 
-    let rows = TestOrderData
+    //let rows = TestOrderData
+    const response = await fetch('productData');
+    let rows = await response.json();
+
     let inputRows = rows.map((row, i) => {
         // заполнить инфу для этого ряда
         return (
