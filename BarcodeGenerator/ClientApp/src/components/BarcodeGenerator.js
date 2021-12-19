@@ -4,17 +4,35 @@ import ProductData from "../Data/Products"
 import { useState } from "react"
 
 export function BarcodeGenerator() {
-    //console.log(JSON.stringify(ParseInitialData(InitialProductData)))
-    console.log(ProductData.Products)
+    const initialData = TestOrderData
+    const [formData, setFormData] = useState(initialData)
+
+    // обновить ряд в форме
+    function setRowData(row, index){
+        let nextForm = formData.map((f, i) => {
+            if (i === index){
+                return row
+            }else{
+                return f
+            }
+        })
+        setFormData(nextForm)
+    }
+
+    function deleteRow(index)
+    {
+        const nextForm = formData.filter((d, i) => index !== i)
+        setFormData(nextForm)
+    }
 
     //let rows = TestOrderData
-    const response = await fetch('productData');
-    let rows = await response.json();
+    // const response = await fetch('productData');
+    // let rows = await response.json();
 
-    let inputRows = rows.map((row, i) => {
+    let inputRows = formData.map((row, i) => {
         // заполнить инфу для этого ряда
         return (
-            <InputRow key={i} row={row} productData={ProductData.Products} />
+            <InputRow key={i} row={row} rowIndex={i} productData={ProductData.Products} setRowData={setRowData} deleteRow={deleteRow}/>
         )
     })
 
@@ -28,9 +46,15 @@ export function BarcodeGenerator() {
     )
 }
 
-function InputRow({ row, productData }) {
+function InputRow({ 
+    row,
+    rowIndex,
+    productData, 
+    setRowData, 
+    deleteRow 
+}) {
 
-    const [rowData, setRowData] = useState(row)
+    //const [rowData, setRowData] = useState(row)
     let currentProduct = null
     let productOptions = productData.map((p, i) => {
         if (row.Type === p.Type) {
@@ -51,13 +75,14 @@ function InputRow({ row, productData }) {
     }
 
     function handleInputChange(e) {
-        let updatedRowData = { ...rowData, [e.target.name]: e.target.value }
+        let updatedRowData = { ...row, [e.target.name]: e.target.value }
+        
         updatedRowData.Sku = GenerateSku(updatedRowData)
-        setRowData(updatedRowData)
+        setRowData(updatedRowData, rowIndex)
     }
 
     function handleSimpleInputChange(e) {
-        setRowData({ ...rowData, [e.target.name]: e.target.value })
+        setRowData({ ...row, [e.target.name]: e.target.value }, rowIndex)
     }
 
     function GenerateSku(rData) {
@@ -79,25 +104,25 @@ function InputRow({ row, productData }) {
     return (
         <div className="row mb-3 input-row" >
             <div className="col-2">
-                <input type="text" placeholder="Артикул" className="form-control product-sku" name="Sku" value={rowData.Sku} onChange={handleSkuChange} />
+                <input type="text" placeholder="Артикул" className="form-control product-sku" name="Sku" value={row.Sku} onChange={handleSkuChange} />
             </div>
             <div className="col">
-                <select className="form-select product-name product-input" name="Type" value={rowData.Type} onChange={handleInputChange} >
+                <select className="form-select product-name product-input" name="Type" value={row.Type} onChange={handleInputChange} >
                     <option>Наименование</option>
                     {productOptions}
                 </select>
             </div>
             <div className="col-2">
-                <select className="form-select product-size product-input" name="Size" value={rowData.Size} onChange={handleInputChange}>
+                <select className="form-select product-size product-input" name="Size" value={row.Size} onChange={handleInputChange}>
                     <option>Размер</option>
                     {sizeOptions}
                 </select>
             </div>
             <div className="col-2">
-                <input type="number" placeholder="Цена" className="form-control product-price" name="Price" value={rowData.Price} onChange={handleSimpleInputChange} />
+                <input type="number" placeholder="Цена" className="form-control product-price" name="Price" value={row.Price} onChange={handleSimpleInputChange} />
             </div>
             <div className="col-1">
-                <input type="number" className="form-control product-quantity product-input" value={rowData.Qty} name="Qty" onChange={handleSimpleInputChange} />
+                <input type="number" className="form-control product-quantity product-input" value={row.Qty} name="Qty" onChange={handleSimpleInputChange} />
             </div>
             <div className="col-1">
                 <button type="button" className="btn btn-outline-primary">-</button>
