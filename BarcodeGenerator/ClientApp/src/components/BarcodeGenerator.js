@@ -25,9 +25,18 @@ export function BarcodeGenerator() {
         setFormData(nextForm)
     }
 
-    //let rows = TestOrderData
-    // const response = await fetch('productData');
-    // let rows = await response.json();
+    function handleAddRow(e)
+    {
+        if(formData.length > 0)
+        {
+            const lastItem = formData[formData.length -1]
+            const newItem = {...lastItem, Size: nextSize(lastItem.Size, lastItem.Type)}
+            setFormData([...formData, newItem])
+
+        }
+    }
+
+    
 
     let inputRows = formData.map((row, i) => {
         // заполнить инфу для этого ряда
@@ -41,6 +50,7 @@ export function BarcodeGenerator() {
             <h1 className="mb-5">Barcode Generator 3.0</h1>
             <div id='main-table'>
                 <Form>{inputRows}</Form>
+                <p className="link-secondary" onClick={handleAddRow}>Добавить ряд</p>
             </div>
         </>
     )
@@ -85,6 +95,10 @@ function InputRow({
         setRowData({ ...row, [e.target.name]: e.target.value }, rowIndex)
     }
 
+    function handleRemoveRow(){
+        deleteRow(rowIndex)
+    }
+
     function GenerateSku(rData) {
         let sku = ''
         if (rData.Type) {
@@ -125,8 +139,20 @@ function InputRow({
                 <input type="number" className="form-control product-quantity product-input" value={row.Qty} name="Qty" onChange={handleSimpleInputChange} />
             </div>
             <div className="col-1">
-                <button type="button" className="btn btn-outline-primary">-</button>
+                <button type="button" className="btn btn-outline-primary" onClick={handleRemoveRow}>-</button>
             </div>
         </div>
     )
+}
+
+function nextSize(currentSize, type){
+    const sizes = ProductData.Products.find(p => p.Type === type).Sizes
+    for(let i=0; i< sizes.length; i++){
+        if (sizes[i] === currentSize){
+            return sizes[i+1 % sizes.length]
+        }
+    }
+
+    console.error("не найден размер ", currentSize)
+    return currentSize
 }
