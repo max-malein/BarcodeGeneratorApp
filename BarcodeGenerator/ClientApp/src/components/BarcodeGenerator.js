@@ -1,4 +1,4 @@
-import { Form } from "reactstrap"
+import { Button, Form } from "reactstrap"
 import { TestOrderData } from "../Data/TestData"
 import ProductData from "../Data/Products"
 import { useState } from "react"
@@ -36,6 +36,12 @@ export function BarcodeGenerator() {
         }
     }
 
+    async function handleSubmitForm() {
+        //const response = await fetch('saveorder');
+        const response = await fetch('weatherforecast');
+        const data = await response.text();
+        console.log(data)
+    }
     
 
     let inputRows = formData.map((row, i) => {
@@ -51,6 +57,7 @@ export function BarcodeGenerator() {
             <div id='main-table'>
                 <Form>{inputRows}</Form>
                 <p className="link-secondary" onClick={handleAddRow}>Добавить ряд</p>
+                <Button onClick={handleSubmitForm}>Сохранить заказ</Button>
             </div>
         </>
     )
