@@ -1,8 +1,20 @@
+using BarcodeGenerator.Models;
+using BarcodeGenerator.Services;
+using Microsoft.Extensions.Options;
+using System.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+// https://docs.microsoft.com/ru-ru/aspnet/core/tutorials/first-mongo-app?view=aspnetcore-6.0&tabs=visual-studio
+builder.Services.Configure<PavluqueDatabaseSettings>(builder.Configuration.GetSection(nameof(PavluqueDatabaseSettings)));
+builder.Services.AddSingleton<IPavluqueDatabaseSettings>(sp => sp.GetRequiredService<IOptions<PavluqueDatabaseSettings>>().Value);
+
+builder.Services.AddSingleton<OrderService>();
+
 builder.Services.AddControllersWithViews();
+
 
 var app = builder.Build();
 

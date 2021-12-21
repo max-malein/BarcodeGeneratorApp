@@ -2,6 +2,7 @@ import { Button, Form } from "reactstrap"
 import { TestOrderData } from "../Data/TestData"
 import ProductData from "../Data/Products"
 import { useState } from "react"
+import { type } from "jquery"
 
 export function BarcodeGenerator() {
     const initialData = TestOrderData
@@ -37,8 +38,14 @@ export function BarcodeGenerator() {
     }
 
     async function handleSubmitForm() {
-        //const response = await fetch('saveorder');
-        const response = await fetch('weatherforecast');
+        const response = await fetch('saveorder/555', {
+            method: "POST",
+            body: JSON.stringify(formData),
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+        //const response = await fetch('weatherforecast');
         const data = await response.text();
         console.log(data)
     }

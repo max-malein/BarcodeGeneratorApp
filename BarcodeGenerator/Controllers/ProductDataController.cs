@@ -1,4 +1,4 @@
-﻿using BarcodeGenerator.Model;
+﻿using BarcodeGenerator.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarcodeGenerator.Controllers

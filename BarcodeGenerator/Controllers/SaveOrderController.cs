@@ -1,34 +1,38 @@
-﻿using BarcodeGenerator.Model;
+﻿using BarcodeGenerator.Models;
+using BarcodeGenerator.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BarcodeGenerator.Controllers
 {
     [ApiController]
-    [Route("[controller]")]    
-    public class SaveOrderController : ControllerBase
+    [Route("[controller]")]
+    public class OrderController : ControllerBase
     {
-        //[HttpPost]
-        //public IActionResult Post([FromBody] List<OrderItem> orderItems)
-        //{
-        //    return Ok();
-        //}
-        public SaveOrderController(ILogger<SaveOrderController> logger)
-        {
+        private readonly ILogger<OrderController> logger;
+        private readonly OrderService orderService;
 
+        public OrderController(ILogger<OrderController> logger, OrderService orderService)
+        {
+            this.logger = logger;
+            this.orderService = orderService;
         }
 
-        [HttpGet]
-        public IEnumerable<WeatherForecast> Get()
+        [HttpPost]
+        [Route("{id?}")]
+        public async Task<bool> Save(List<OrderItem> orderItems, string id = "new")
         {
-            //return "it works!";
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            var order = new Order()
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = "fuck"
-            })
-            .ToArray();
+                CreatedAt = DateTime.Now,
+                EditedAt = DateTime.Now,
+                OrderItems = orderItems,
+            };
+
+            if (id != "new")
+                order.Id = id;
+
+            return await orderService.UpsertAsync(order);
         }
     }
 }
