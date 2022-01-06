@@ -30,10 +30,10 @@ export function BarcodeGenerator() {
     {
         if(formData.length > 0)
         {
-            const lastItem = formData[formData.length -1]
-            const newItem = {...lastItem, Size: nextSize(lastItem.Size, lastItem.Type)}
+            const lastItem = formData[formData.length - 1]
+            let newItem = { ...lastItem, Size: nextSize(lastItem.Size, lastItem.Type) }
+            newItem.Sku = GenerateSku(newItem)
             setFormData([...formData, newItem])
-
         }
     }
 
@@ -98,9 +98,18 @@ function InputRow({
         //setRowData([e.target.name] = e.target.value)
     }
 
-    function handleInputChange(e) {
+    function handleTypeChange(e) {
+        const productType = e.target.value
+        const productSize = tryGetSameSize(productType, row.Size)
+        let updatedRowData = { ...row, Type: e.target.value, Size: productSize }
+
+        updatedRowData.Sku = GenerateSku(updatedRowData)
+        setRowData(updatedRowData, rowIndex)
+    }
+
+    function handleSizeChange(e) {
         let updatedRowData = { ...row, [e.target.name]: e.target.value }
-        
+
         updatedRowData.Sku = GenerateSku(updatedRowData)
         setRowData(updatedRowData, rowIndex)
     }
@@ -113,20 +122,13 @@ function InputRow({
         deleteRow(rowIndex)
     }
 
-    function GenerateSku(rData) {
-        let sku = ''
-        if (rData.Type) {
-            let prod = productData.find(p => p.Type === rData.Type)
-            if (prod) {
-                sku = prod.Sku
-            }
+    function tryGetSameSize(productType, productSize) {
+        let product = ProductData.Products.find(p => p.Type === productType)
+        if (product.Sizes.includes(productSize)) {
+            return productSize
+        } else {
+            return product.Sizes[0]
         }
-
-        if (rData.Size) {
-            sku += `-${rData.Size}`
-        }
-
-        return sku
     }
 
     return (
@@ -135,13 +137,13 @@ function InputRow({
                 <input type="text" placeholder="Артикул" className="form-control product-sku" name="Sku" value={row.Sku} onChange={handleSkuChange} />
             </div>
             <div className="col">
-                <select className="form-select product-name product-input" name="Type" value={row.Type} onChange={handleInputChange} >
+                <select className="form-select product-name product-input" name="Type" value={row.Type} onChange={handleTypeChange} >
                     <option>Наименование</option>
                     {productOptions}
                 </select>
             </div>
             <div className="col-2">
-                <select className="form-select product-size product-input" name="Size" value={row.Size} onChange={handleInputChange}>
+                <select className="form-select product-size product-input" name="Size" value={row.Size} onChange={handleSizeChange}>
                     <option>Размер</option>
                     {sizeOptions}
                 </select>
@@ -159,11 +161,27 @@ function InputRow({
     )
 }
 
+function GenerateSku(rData) {
+    let sku = ''
+    if (rData.Type) {
+        let prod = ProductData.Products.find(p => p.Type === rData.Type)
+        if (prod) {
+            sku = prod.Sku
+        }
+    }
+
+    if (rData.Size) {
+        sku += `-${rData.Size}`
+    }
+
+    return sku
+}
+
 function nextSize(currentSize, type){
     const sizes = ProductData.Products.find(p => p.Type === type).Sizes
     for(let i=0; i< sizes.length; i++){
-        if (sizes[i] === currentSize){
-            return sizes[i+1 % sizes.length]
+        if (sizes[i] === currentSize) {
+            return sizes[(i + 1) % sizes.length]
         }
     }
 
