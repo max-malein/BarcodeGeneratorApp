@@ -28,6 +28,8 @@ export function BarcodeGenerator() {
 
     function handleAddRow(e)
     {
+        e.preventDefault()
+
         if(formData.length > 0)
         {
             const lastItem = formData[formData.length - 1]
@@ -63,7 +65,11 @@ export function BarcodeGenerator() {
             <h1 className="mb-5">Barcode Generator 3.0</h1>
             <div id='main-table'>
                 <Form>{inputRows}</Form>
-                <p className="link-secondary" onClick={handleAddRow}>Добавить ряд</p>
+                <div className="row">
+                    <div className="col-2 mb-5">
+                        <Button className="btn-light w-100 text-start" onClick={handleAddRow}>+ Добавить ряд</Button>
+                    </div>
+                </div>
                 <Button onClick={handleSubmitForm}>Сохранить заказ</Button>
             </div>
         </>
