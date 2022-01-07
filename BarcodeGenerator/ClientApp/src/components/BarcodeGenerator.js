@@ -30,11 +30,22 @@ export function BarcodeGenerator() {
     {
         e.preventDefault()
 
-        if(formData.length > 0)
-        {
+        if (formData.length > 0) {
             const lastItem = formData[formData.length - 1]
             let newItem = { ...lastItem, Size: nextSize(lastItem.Size, lastItem.Type) }
             newItem.Sku = GenerateSku(newItem)
+            setFormData([...formData, newItem])
+        }
+        else { // вообще ничего еще не добавлено
+            var product = ProductData.Products[0]
+            const newItem = {
+                Sku: product.Sku,
+                Type: product.Type,
+                Size: product.Sizes[0],
+                Price: product.Price,
+                Qty: 1
+            }
+
             setFormData([...formData, newItem])
         }
     }
