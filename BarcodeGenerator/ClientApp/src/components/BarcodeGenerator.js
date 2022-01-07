@@ -118,7 +118,8 @@ function InputRow({
     function handleTypeChange(e) {
         const productType = e.target.value
         const productSize = tryGetSameSize(productType, row.Size)
-        let updatedRowData = { ...row, Type: e.target.value, Size: productSize }
+        const productPrice = getPriceByType(productType)
+        let updatedRowData = { ...row, Type: e.target.value, Size: productSize, Price: productPrice }
 
         updatedRowData.Sku = GenerateSku(updatedRowData)
         setRowData(updatedRowData, rowIndex)
@@ -176,6 +177,15 @@ function InputRow({
             </div>
         </div>
     )
+}
+
+function getPriceByType(productType) {
+    const product = ProductData.Products.find(p => p.Type === productType)
+    if (product) {
+        return product.Price
+    } else {
+        return 0
+    }
 }
 
 function GenerateSku(rData) {
