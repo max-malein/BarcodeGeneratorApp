@@ -6,21 +6,21 @@ using Microsoft.AspNetCore.Mvc;
 namespace BarcodeGenerator.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
-    public class OrderController : ControllerBase
+    [Route("api/[controller]")]
+    public class SaveOrderController : ControllerBase
     {
-        private readonly ILogger<OrderController> logger;
+        private readonly ILogger<SaveOrderController> logger;
         private readonly OrderService orderService;
 
-        public OrderController(ILogger<OrderController> logger, OrderService orderService)
+        public SaveOrderController(ILogger<SaveOrderController> logger, OrderService orderService)
         {
             this.logger = logger;
             this.orderService = orderService;
         }
 
         [HttpPost]
-        [Route("{id?}")]
-        public async Task<bool> Save(List<OrderItem> orderItems, string id = "new")
+        [Route("{orderId?}")]
+        public async Task<bool> Save(List<OrderItem> orderItems, int orderId = -1)
         {
             var order = new Order()
             {
@@ -29,10 +29,22 @@ namespace BarcodeGenerator.Controllers
                 OrderItems = orderItems,
             };
 
-            if (id != "new")
-                order.Id = id;
+            if (orderId == -1)
+            {
+                order.OrderId = await orderService.GetNextOrderNumberAsync();
+                return await orderService.AddAsync(order);
+            }
+            else
+            {
+                order.OrderId = orderId;
+                return await orderService.UpsertAsync(order);
+            }
+        }
 
-            return await orderService.UpsertAsync(order);
+        [HttpGet]
+        public async Task<string> Get()
+        {
+            return "fuck it!";
         }
     }
 }

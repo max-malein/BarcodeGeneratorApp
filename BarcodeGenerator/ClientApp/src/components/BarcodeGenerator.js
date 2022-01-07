@@ -40,7 +40,7 @@ export function BarcodeGenerator() {
     }
 
     async function handleSubmitForm() {
-        const response = await fetch('saveorder/555', {
+        const response = await fetch('api/saveorder', {
             method: "POST",
             body: JSON.stringify(formData),
             headers: {

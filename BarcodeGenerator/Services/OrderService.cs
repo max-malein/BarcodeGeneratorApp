@@ -1,4 +1,5 @@
 ﻿using BarcodeGenerator.Models;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace BarcodeGenerator.Services
@@ -15,9 +16,15 @@ namespace BarcodeGenerator.Services
             _orders = db.GetCollection<Order>(dbSettings.OrdersCollectionName);
         }
 
-        public async Task<Order> GetAsync(string id)
+        public async Task<Order> GetAsync(ObjectId id)
         {
             var filter = Builders<Order>.Filter.Eq(o => o.Id, id);
+            return await _orders.Find(filter).FirstOrDefaultAsync();
+        }
+
+        public async Task<Order> GetAsync(int orderId)
+        {
+            var filter = Builders<Order>.Filter.Eq(o => o.OrderId, orderId);
             return await _orders.Find(filter).FirstOrDefaultAsync();
         }
 
@@ -28,18 +35,6 @@ namespace BarcodeGenerator.Services
                 throw new ArgumentNullException(nameof(order));
             }
 
-            if (!string.IsNullOrEmpty(order.Id))
-            {
-                var existingOrder = await GetAsync(order.Id);
-                if (existingOrder != null)
-                {
-                    existingOrder.OrderItems = order.OrderItems;
-                    existingOrder.EditedAt = DateTime.Now;
-                    var result = await _orders.ReplaceOneAsync(Builders<Order>.Filter.Eq(o => o.Id, order.Id), existingOrder);
-                    return result.IsAcknowledged;
-                }
-            }
-
             // новый заказ
             try
             {
@@ -47,11 +42,24 @@ namespace BarcodeGenerator.Services
             }
             catch (Exception)
             {
-
                 return false;
             }
 
             return true;
+        }
+
+        public async Task<int> GetNextOrderNumberAsync()
+        {
+            var orders = await _orders.Find(_ => true).ToListAsync();
+            if (orders.Any())
+            {
+                return orders.Max(o => o.OrderId) + 1;
+            }
+            else
+            {
+                return 0;
+            }
+            
         }
 
         public async Task<bool> ReplaceAsync(Order order)
@@ -61,12 +69,12 @@ namespace BarcodeGenerator.Services
                 throw new ArgumentNullException(nameof(order));
             }
 
-            var existingOrder = await GetAsync(order.Id);
+            var existingOrder = await GetAsync(order.OrderId);
             if (existingOrder != null)
             {
                 existingOrder.OrderItems = order.OrderItems;
                 existingOrder.EditedAt = DateTime.Now;
-                var result = await _orders.ReplaceOneAsync(Builders<Order>.Filter.Eq(o => o.Id, order.Id), existingOrder);
+                var result = await _orders.ReplaceOneAsync(Builders<Order>.Filter.Eq(o => o.Id, existingOrder.Id), existingOrder);
                 return result.IsAcknowledged;
             }
 
@@ -80,8 +88,7 @@ namespace BarcodeGenerator.Services
                 throw new ArgumentNullException(nameof(order));
             }
 
-            var existingOrder = await GetAsync(order.Id);
-            if (existingOrder != null)
+            if (await GetAsync(order.OrderId) != null)
             {
                 return await ReplaceAsync(order);
             }
@@ -90,5 +97,7 @@ namespace BarcodeGenerator.Services
                 return await AddAsync(order);
             }
         }
+
+        
     }
 }
