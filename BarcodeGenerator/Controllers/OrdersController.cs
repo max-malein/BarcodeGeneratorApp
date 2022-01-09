@@ -7,12 +7,12 @@ namespace BarcodeGenerator.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class SaveOrderController : ControllerBase
+    public class OrdersController : ControllerBase
     {
-        private readonly ILogger<SaveOrderController> logger;
+        private readonly ILogger<OrdersController> logger;
         private readonly OrderService orderService;
 
-        public SaveOrderController(ILogger<SaveOrderController> logger, OrderService orderService)
+        public OrdersController(ILogger<OrdersController> logger, OrderService orderService)
         {
             this.logger = logger;
             this.orderService = orderService;
@@ -42,9 +42,10 @@ namespace BarcodeGenerator.Controllers
         }
 
         [HttpGet]
-        public async Task<string> Get()
+        public async Task<IEnumerable<Order>> Get()
         {
-            return "fuck it!";
+            //Thread.Sleep(2000);
+            return await orderService.GetAllAsync();
         }
     }
 }

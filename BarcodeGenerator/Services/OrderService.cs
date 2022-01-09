@@ -48,6 +48,11 @@ namespace BarcodeGenerator.Services
             return true;
         }
 
+        public async Task<List<Order>> GetAllAsync()
+        {
+            return await _orders.Find(_ => true).ToListAsync();
+        }
+
         public async Task<int> GetNextOrderNumberAsync()
         {
             var orders = await _orders.Find(_ => true).ToListAsync();

@@ -4,7 +4,7 @@ import ProductData from "../Data/Products"
 import { useState } from "react"
 import { type } from "jquery"
 
-export function BarcodeGenerator() {
+export function OrderEditor() {
     const initialData = TestOrderData
     const [formData, setFormData] = useState(initialData)
 
@@ -51,7 +51,7 @@ export function BarcodeGenerator() {
     }
 
     async function handleSubmitForm() {
-        const response = await fetch('api/saveorder', {
+        const response = await fetch('api/orders', {
             method: "POST",
             body: JSON.stringify(formData),
             headers: {
