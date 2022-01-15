@@ -47,5 +47,13 @@ namespace BarcodeGenerator.Controllers
             //Thread.Sleep(2000);
             return await orderService.GetAllAsync();
         }
+
+        [HttpGet("{orderId}")]
+        public async Task<Order> Get(int orderId)
+        {
+            //Thread.Sleep(2000);
+            var order = await orderService.GetAsync(orderId);
+            return order;
+        }
     }
 }

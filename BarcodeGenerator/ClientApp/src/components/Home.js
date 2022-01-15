@@ -33,7 +33,7 @@ export function Home() {
     return (
         <div>
             <h1>Pavluque Order Generator</h1>
-            <button>Создать новый заказ</button>
+            <button className="btn">Создать новый заказ</button>
             {orderList}
         </div>
         )

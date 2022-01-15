@@ -3,10 +3,30 @@ import { TestOrderData } from "../Data/TestData"
 import ProductData from "../Data/Products"
 import { useState } from "react"
 import { type } from "jquery"
+import { useParams } from "react-router-dom"
 
 export function OrderEditor() {
-    const initialData = TestOrderData
-    const [formData, setFormData] = useState(initialData)
+    const [formData, setFormData] = useState(null)
+
+    const params = useParams()
+    const orderId = params.id
+    const order = getOrder(orderId)
+    console.log("order: ", order)
+    order.then(o => {
+        if (o) {
+            setFormData(o.orderItems)
+            console.log('order from db: ', o)
+        } else {
+            console.log("o: ", o)
+            return (<div>Не найден заказ {orderId}</div>)
+        }
+        
+    })
+    //const initialData = TestOrderData
+
+    if (formData === null) {
+        return (<div>Loading...</div>)
+    }
 
     // обновить ряд в форме
     function setRowData(row, index){
@@ -60,9 +80,7 @@ export function OrderEditor() {
         });
         //const response = await fetch('weatherforecast');
         const data = await response.text();
-        console.log(data)
     }
-    
 
     let inputRows = formData.map((row, i) => {
         // заполнить инфу для этого ряда
@@ -214,4 +232,16 @@ function nextSize(currentSize, type){
 
     console.error("не найден размер ", currentSize)
     return currentSize
+}
+
+async function getOrder(orderId) {
+    const response = await fetch(`/api/orders/${orderId}`)
+    console.log('response: ', response)
+    if (response.status !== 204) {
+        const order = await response.json()
+        return order
+    } else {
+        return null
+    }
+    
 }
