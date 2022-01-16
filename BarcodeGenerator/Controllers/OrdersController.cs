@@ -55,5 +55,13 @@ namespace BarcodeGenerator.Controllers
             var order = await orderService.GetAsync(orderId);
             return order;
         }
+
+        [HttpGet]
+        [Route("nextAvailableOrderNumber")]
+        public async Task<int> GetNewOrderNumber()
+        {
+            var orderNumber = await orderService.GetNextOrderNumberAsync();
+            return orderNumber;
+        }
     }
 }

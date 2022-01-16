@@ -1,31 +1,95 @@
-import { Button, Form } from "reactstrap"
+import { Button, Form, Row } from "reactstrap"
 import { TestOrderData } from "../Data/TestData"
 import ProductData from "../Data/Products"
-import { useState } from "react"
-import { type } from "jquery"
+import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 
 export function OrderEditor() {
-    const [formData, setFormData] = useState(null)
+    const [formData, setFormData] = useState([])
+    const [isLoaded, setIsLoaded] = useState(false)
+    const [error, setError] = useState(null)
+    const [orderNumber, setOrderNumber] = useState(0)
 
     const params = useParams()
     const orderId = params.id
-    const order = getOrder(orderId)
-    console.log("order: ", order)
-    order.then(o => {
-        if (o) {
-            setFormData(o.orderItems)
-            console.log('order from db: ', o)
-        } else {
-            console.log("o: ", o)
-            return (<div>Не найден заказ {orderId}</div>)
-        }
-        
-    })
-    //const initialData = TestOrderData
 
-    if (formData === null) {
+    useEffect(() => {
+        if (orderId !== 'new') {
+            fetch(`/api/orders/${orderId}`)
+                .then(response => {
+                    console.log("статус ответа: ", response.status)
+                    if (response.status === 204) {
+                        console.log('response is ok!!! ', response.status)
+                        return {orderItems:[]}
+                    } else if (response.ok) {
+                        return response.json()
+                    }
+                    else {
+                        throw Error(response.statusText)
+                    }
+                })
+                .then(order => {
+                    console.log("order: ", order)
+                    setFormData(order.orderItems)
+                })
+                .catch(error => setError(error))
+                .finally(() => {
+                    setIsLoaded(true)
+                    setOrderNumber(orderId)
+                })
+
+        } else { // новый заказ
+            fetch('/api/orders/nextAvailableOrderNumber')
+                .then(response => {
+                    if (response.ok) {
+                        return response.text()
+                    }
+                    throw Error(response.statusText)
+                })
+                .then(num => {
+                    setOrderNumber(num)
+                })
+                .catch(error => setOrderNumber('???'))
+                .finally(() => setIsLoaded(true))
+        }
+    }, [])
+
+    function handleOrderNumberChange(e) {
+        setOrderNumber(e.target.value)
+    }
+
+    if (isLoaded === false) {
         return (<div>Loading...</div>)
+    } else if (error) {
+        return (<div>ОШИБКА: {error}</div>)
+    } else {
+        
+            let inputRows = formData.map((row, i) => {
+                // заполнить инфу для этого ряда
+                return (
+                    <InputRow key={i} row={row} rowIndex={i} productData={ProductData.Products} setRowData={setRowData} deleteRow={deleteRow} />
+                )
+            })
+        
+        
+
+        return (
+            <>
+                <div id='header' className="row row-cols-auto mb-3">
+                    <h1 className="col">Редактор заказа </h1><input className='col-lg-1 col-2 h1' type="number" value={orderNumber} onChange={handleOrderNumberChange} />
+                </div>
+                <hr className="mt-3 mb-3"></hr>
+                <div id='main-table'>
+                    <Form>{inputRows}</Form>
+                    <div className="row">
+                        <div className="col-2 mb-5">
+                            <Button className="btn-light w-100 text-start" onClick={handleAddRow}>+ Добавить ряд</Button>
+                        </div>
+                    </div>
+                    <Button onClick={handleSubmitForm}>Сохранить заказ</Button>
+                </div>
+            </>
+        )
     }
 
     // обновить ряд в форме
@@ -49,21 +113,22 @@ export function OrderEditor() {
     function handleAddRow(e)
     {
         e.preventDefault()
+        console.log(formData)
 
         if (formData.length > 0) {
             const lastItem = formData[formData.length - 1]
-            let newItem = { ...lastItem, Size: nextSize(lastItem.Size, lastItem.Type) }
-            newItem.Sku = GenerateSku(newItem)
+            let newItem = { ...lastItem, size: nextSize(lastItem.size, lastItem.type) }
+            newItem.sku = GenerateSku(newItem)
             setFormData([...formData, newItem])
         }
         else { // вообще ничего еще не добавлено
             var product = ProductData.Products[0]
             const newItem = {
-                Sku: product.Sku,
-                Type: product.Type,
-                Size: product.Sizes[0],
-                Price: product.Price,
-                Qty: 1
+                sku: product.sku,
+                type: product.type,
+                size: product.sizes[0],
+                price: product.price,
+                qty: 1
             }
 
             setFormData([...formData, newItem])
@@ -71,38 +136,18 @@ export function OrderEditor() {
     }
 
     async function handleSubmitForm() {
-        const response = await fetch('api/orders', {
+        const response = await fetch(`api/orders/${orderNumber}`, {
             method: "POST",
             body: JSON.stringify(formData),
             headers: {
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
         });
         //const response = await fetch('weatherforecast');
         const data = await response.text();
     }
 
-    let inputRows = formData.map((row, i) => {
-        // заполнить инфу для этого ряда
-        return (
-            <InputRow key={i} row={row} rowIndex={i} productData={ProductData.Products} setRowData={setRowData} deleteRow={deleteRow}/>
-        )
-    })
-
-    return (
-        <>
-            <h1 className="mb-5">Barcode Generator 3.0</h1>
-            <div id='main-table'>
-                <Form>{inputRows}</Form>
-                <div className="row">
-                    <div className="col-2 mb-5">
-                        <Button className="btn-light w-100 text-start" onClick={handleAddRow}>+ Добавить ряд</Button>
-                    </div>
-                </div>
-                <Button onClick={handleSubmitForm}>Сохранить заказ</Button>
-            </div>
-        </>
-    )
+    
 }
 
 function InputRow({ 
@@ -116,37 +161,37 @@ function InputRow({
     //const [rowData, setRowData] = useState(row)
     let currentProduct = null
     let productOptions = productData.map((p, i) => {
-        if (row.Type === p.Type) {
+        if (row.type === p.type) {
             currentProduct = p
         }
-        return (<option key={i}>{p.Type}</option>)
+        return (<option key={i}>{p.type}</option>)
     })
 
     let sizeOptions = []
     if (currentProduct) {
-        sizeOptions = currentProduct.Sizes.map((s,i) => {
+        sizeOptions = currentProduct.sizes.map((s,i) => {
             return (<option key={i}>{s}</option>)
         })
     }
 
-    function handleSkuChange(e) {
+    function handleskuChange(e) {
         //setRowData([e.target.name] = e.target.value)
     }
 
     function handleTypeChange(e) {
-        const productType = e.target.value
-        const productSize = tryGetSameSize(productType, row.Size)
-        const productPrice = getPriceByType(productType)
-        let updatedRowData = { ...row, Type: e.target.value, Size: productSize, Price: productPrice }
+        const producttype = e.target.value
+        const productsize = tryGetSamesize(producttype, row.size)
+        const productprice = getPriceByType(producttype)
+        let updatedRowData = { ...row, type: e.target.value, size: productsize, price: productprice }
 
-        updatedRowData.Sku = GenerateSku(updatedRowData)
+        updatedRowData.sku = GenerateSku(updatedRowData)
         setRowData(updatedRowData, rowIndex)
     }
 
     function handleSizeChange(e) {
         let updatedRowData = { ...row, [e.target.name]: e.target.value }
 
-        updatedRowData.Sku = GenerateSku(updatedRowData)
+        updatedRowData.sku = GenerateSku(updatedRowData)
         setRowData(updatedRowData, rowIndex)
     }
 
@@ -158,37 +203,37 @@ function InputRow({
         deleteRow(rowIndex)
     }
 
-    function tryGetSameSize(productType, productSize) {
-        let product = ProductData.Products.find(p => p.Type === productType)
-        if (product.Sizes.includes(productSize)) {
-            return productSize
+    function tryGetSamesize(producttype, productsize) {
+        let product = ProductData.Products.find(p => p.type === producttype)
+        if (product.sizes.includes(productsize)) {
+            return productsize
         } else {
-            return product.Sizes[0]
+            return product.sizes[0]
         }
     }
 
     return (
         <div className="row mb-3 input-row" >
             <div className="col-2">
-                <input type="text" placeholder="Артикул" className="form-control product-sku" name="Sku" value={row.Sku} onChange={handleSkuChange} />
+                <input type="text" placeholder="Артикул" className="form-control product-sku" name="sku" value={row.sku} onChange={handleskuChange} />
             </div>
             <div className="col">
-                <select className="form-select product-name product-input" name="Type" value={row.Type} onChange={handleTypeChange} >
+                <select className="form-select product-name product-input" name="type" value={row.type} onChange={handleTypeChange} >
                     <option>Наименование</option>
                     {productOptions}
                 </select>
             </div>
             <div className="col-2">
-                <select className="form-select product-size product-input" name="Size" value={row.Size} onChange={handleSizeChange}>
+                <select className="form-select product-size product-input" name="size" value={row.size} onChange={handleSizeChange}>
                     <option>Размер</option>
                     {sizeOptions}
                 </select>
             </div>
             <div className="col-2">
-                <input type="number" placeholder="Цена" className="form-control product-price" name="Price" value={row.Price} onChange={handleSimpleInputChange} />
+                <input type="number" placeholder="Цена" className="form-control product-price" name="price" value={row.price} onChange={handleSimpleInputChange} />
             </div>
             <div className="col-1">
-                <input type="number" className="form-control product-quantity product-input" value={row.Qty} name="Qty" onChange={handleSimpleInputChange} />
+                <input type="number" className="form-control product-quantity product-input" value={row.qty} name="qty" onChange={handleSimpleInputChange} />
             </div>
             <div className="col-1">
                 <button type="button" className="btn btn-outline-primary" onClick={handleRemoveRow}>-</button>
@@ -198,9 +243,9 @@ function InputRow({
 }
 
 function getPriceByType(productType) {
-    const product = ProductData.Products.find(p => p.Type === productType)
+    const product = ProductData.Products.find(p => p.type === productType)
     if (product) {
-        return product.Price
+        return product.price
     } else {
         return 0
     }
@@ -208,30 +253,31 @@ function getPriceByType(productType) {
 
 function GenerateSku(rData) {
     let sku = ''
-    if (rData.Type) {
-        let prod = ProductData.Products.find(p => p.Type === rData.Type)
+    if (rData.type) {
+        let prod = ProductData.Products.find(p => p.type === rData.type)
         if (prod) {
-            sku = prod.Sku
+            sku = prod.sku
         }
     }
 
-    if (rData.Size) {
-        sku += `-${rData.Size}`
+    if (rData.size) {
+        sku += `-${rData.size}`
     }
 
     return sku
 }
 
-function nextSize(currentSize, type){
-    const sizes = ProductData.Products.find(p => p.Type === type).Sizes
+function nextSize(currentsize, type) {
+    let prods = ProductData.Products
+    const sizes = ProductData.Products.find(p => p.type === type).sizes
     for(let i=0; i< sizes.length; i++){
-        if (sizes[i] === currentSize) {
+        if (sizes[i] === currentsize) {
             return sizes[(i + 1) % sizes.length]
         }
     }
 
-    console.error("не найден размер ", currentSize)
-    return currentSize
+    console.error("не найден размер ", currentsize)
+    return currentsize
 }
 
 async function getOrder(orderId) {

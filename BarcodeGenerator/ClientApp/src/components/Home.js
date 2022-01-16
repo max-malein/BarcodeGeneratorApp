@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from 'react'
 import { OrderList } from './OrderList'
+import { Link } from 'react-router-dom'
 
 export function Home() {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -30,10 +31,14 @@ export function Home() {
         }
     }
 
+    function handleButtonClick(event) {
+
+    }
+
     return (
         <div>
             <h1>Pavluque Order Generator</h1>
-            <button className="btn">Создать новый заказ</button>
+            <Link to="/orders/new" className="btn btn-primary">Создать новый заказ</Link>
             {orderList}
         </div>
         )

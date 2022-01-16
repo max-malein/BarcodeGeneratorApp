@@ -13,7 +13,7 @@
                         {calculateTotalPrice(o)} руб.
                     </div>
                     <div className='col'>
-                        {o.editedAt}
+                        {new Date(o.editedAt).toLocaleDateString('ru-RU')}
                     </div>
                     <div className='col'>
                         <a href={'/orders/' + o.orderId} name={o.OrderId}>Редактировать</a>
@@ -25,10 +25,34 @@
                 )            
         })
 
+        const headers = <li key={-1} className="row fw-bold mb-2">
+            <div className='col'>
+                Номер заказа
+            </div>
+            <div className='col'>
+                Количество
+            </div>
+            <div className='col'>
+                Сумма
+            </div>
+            <div className='col'>
+                Изменен
+            </div>
+            <div className='col'>
+                
+            </div>
+            <div className='col'>
+                
+            </div>
+        </li>
+
         return (
             <div id="list of orders">
                     <h2>Заказы</h2>
-                    <ul>{listOfOrders}</ul>
+                <ul>
+                    {headers}
+                    {listOfOrders}
+                </ul>
             </div>
             )
     }    
