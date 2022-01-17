@@ -1,5 +1,6 @@
 ﻿using BarcodeGenerator.Models;
 using BarcodeGenerator.Services;
+using BarcodeGeneratorBackend;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -41,10 +42,23 @@ namespace BarcodeGenerator.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("barcodes")]
+        public async Task<IActionResult> CreateBarcodes(List<OrderItem> orderItems)
+        {
+            //string path = Path.Combine(_appEnvironment.ContentRootPath, "Files/book.pdf");
+            //FileStream fs = new FileStream(path, FileMode.Open);
+            //string file_type = "application/xlsx";
+            //string file_name = "order.xlsx";
+            //return File(fs, file_type, file_name);
+            return Ok();
+        }
+
         [HttpGet]
         public async Task<IEnumerable<Order>> Get()
         {
             //Thread.Sleep(2000);
+            //ExcelWriter.SaveBarcodes()
             return await orderService.GetAllAsync();
         }
 
