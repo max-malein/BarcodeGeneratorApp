@@ -171,11 +171,12 @@ export function OrderEditor() {
 
         let blob = await response.blob()
 
-        downloadFile(blob, `Stikers ${orderNumber}.xlsx`)
+        downloadFile(blob, `Order ${orderNumber}.xlsx`)
     }
 }
 
 function downloadFile(blob, fileName) {
+
     // Create blob link to download
     const url = window.URL.createObjectURL(new Blob([blob]))
     console.log('url: ', url)

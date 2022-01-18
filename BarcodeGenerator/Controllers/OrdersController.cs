@@ -1,6 +1,5 @@
 ﻿using BarcodeGenerator.Models;
 using BarcodeGenerator.Services;
-using BarcodeGeneratorBackend;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
