@@ -20,7 +20,7 @@ export function OrderEditor() {
                     console.log("статус ответа: ", response.status)
                     if (response.status === 204) {
                         console.log('response is ok!!! ', response.status)
-                        return {orderItems:[]}
+                        return { orderItems: [] }
                     } else if (response.ok) {
                         return response.json()
                     }
@@ -63,15 +63,12 @@ export function OrderEditor() {
     } else if (error) {
         return (<div>ОШИБКА: {error}</div>)
     } else {
-        
-            let inputRows = formData.map((row, i) => {
-                // заполнить инфу для этого ряда
-                return (
-                    <InputRow key={i} row={row} rowIndex={i} productData={ProductData.Products} setRowData={setRowData} deleteRow={deleteRow} />
-                )
-            })
-        
-        
+        let inputRows = formData.map((row, i) => {
+            // заполнить инфу для этого ряда
+            return (
+                <InputRow key={i} row={row} rowIndex={i} productData={ProductData.Products} setRowData={setRowData} deleteRow={deleteRow} />
+            )
+        })
 
         return (
             <>
@@ -86,32 +83,32 @@ export function OrderEditor() {
                             <Button className="btn-light w-100 text-start" onClick={handleAddRow}>+ Добавить ряд</Button>
                         </div>
                     </div>
-                    <Button onClick={handleSubmitForm}>Сохранить заказ</Button>
+                    <Button onClick={handleSave}>Сохранить заказ</Button>
+                    <Button onClick={handleStickers}>Скачать наклейки</Button>
+                    <Button onClick={handleOrderDownload}>Скачать заказ</Button>
                 </div>
             </>
         )
     }
 
     // обновить ряд в форме
-    function setRowData(row, index){
+    function setRowData(row, index) {
         let nextForm = formData.map((f, i) => {
-            if (i === index){
+            if (i === index) {
                 return row
-            }else{
+            } else {
                 return f
             }
         })
         setFormData(nextForm)
     }
 
-    function deleteRow(index)
-    {
+    function deleteRow(index) {
         const nextForm = formData.filter((d, i) => index !== i)
         setFormData(nextForm)
     }
 
-    function handleAddRow(e)
-    {
+    function handleAddRow(e) {
         e.preventDefault()
         console.log(formData)
 
@@ -135,7 +132,7 @@ export function OrderEditor() {
         }
     }
 
-    async function handleSubmitForm() {
+    async function handleSave() {
         const response = await fetch(`api/orders/${orderNumber}`, {
             method: "POST",
             body: JSON.stringify(formData),
@@ -147,15 +144,65 @@ export function OrderEditor() {
         const data = await response.text();
     }
 
-    
+    async function handleStickers() {
+        console.log(formData)
+        const response = await fetch(`api/orders/barcodes/${orderNumber}`, {
+            method: "POST",
+            body: JSON.stringify(formData),
+            headers: {
+                "Content-type": "application/json",
+            }
+        });
+
+        let blob = await response.blob()
+
+        downloadFile(blob, `Stikers ${orderNumber}.xlsx`)
+    }
+
+    async function handleOrderDownload() {
+        console.log(formData)
+        const response = await fetch(`api/orders/order/${orderNumber}`, {
+            method: "POST",
+            body: JSON.stringify(formData),
+            headers: {
+                "Content-type": "application/json",
+            }
+        });
+
+        let blob = await response.blob()
+
+        downloadFile(blob, `Stikers ${orderNumber}.xlsx`)
+    }
 }
 
-function InputRow({ 
+function downloadFile(blob, fileName) {
+    // Create blob link to download
+    const url = window.URL.createObjectURL(new Blob([blob]))
+    console.log('url: ', url)
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute(
+        'download',
+        fileName,
+    );
+
+    // Append to html link element page
+    document.body.appendChild(link);
+
+    // Start download
+    link.click();
+
+    // Clean up and remove the link
+    link.parentNode.removeChild(link);
+}
+
+
+function InputRow({
     row,
     rowIndex,
-    productData, 
-    setRowData, 
-    deleteRow 
+    productData,
+    setRowData,
+    deleteRow
 }) {
 
     //const [rowData, setRowData] = useState(row)
@@ -169,7 +216,7 @@ function InputRow({
 
     let sizeOptions = []
     if (currentProduct) {
-        sizeOptions = currentProduct.sizes.map((s,i) => {
+        sizeOptions = currentProduct.sizes.map((s, i) => {
             return (<option key={i}>{s}</option>)
         })
     }
@@ -199,7 +246,7 @@ function InputRow({
         setRowData({ ...row, [e.target.name]: e.target.value }, rowIndex)
     }
 
-    function handleRemoveRow(){
+    function handleRemoveRow() {
         deleteRow(rowIndex)
     }
 
@@ -270,7 +317,7 @@ function GenerateSku(rData) {
 function nextSize(currentsize, type) {
     let prods = ProductData.Products
     const sizes = ProductData.Products.find(p => p.type === type).sizes
-    for(let i=0; i< sizes.length; i++){
+    for (let i = 0; i < sizes.length; i++) {
         if (sizes[i] === currentsize) {
             return sizes[(i + 1) % sizes.length]
         }
@@ -289,5 +336,5 @@ async function getOrder(orderId) {
     } else {
         return null
     }
-    
+
 }
