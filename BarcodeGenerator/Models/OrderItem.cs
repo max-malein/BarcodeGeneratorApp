@@ -14,10 +14,5 @@ namespace BarcodeGenerator.Models
         public string Size { get; set; }
         public double Price { get; set; }
         public int Qty { get; set; }
-
-        public string Encode()
-        {
-            return Code128Generator.Encode(Sku);
-        }
     }
 }

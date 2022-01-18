@@ -47,13 +47,32 @@ namespace BarcodeGenerator.Controllers
         [Route("barcodes/{id}")]
         public async Task<IActionResult> CreateBarcodes(List<OrderItem> orderItems, int id)
         {
+            List<OrderItem> everyItem = SeparateOrderItems(orderItems);
             string templateFileName = configuration.GetSection("TemplateFiles").GetValue<string>("Barcodes");
             string templatePath = Path.Combine("Templates", templateFileName);
             //string templatePath = templateFileName;
-            byte[] file = await ExcelService.CreateBarcodes(templatePath, orderItems);
+            byte[] file = await ExcelService.CreateBarcodes(templatePath, everyItem);
             string file_type = "application/xlsx";
             string file_name = $"Order_{id}_stickers.xlsx";
             return File(file, file_type, file_name);
+        }
+
+        private static List<OrderItem> SeparateOrderItems(List<OrderItem> orderItems)
+        {
+            var separatedItems = new List<OrderItem>();
+            foreach (var item in orderItems)
+            {
+                int qty = item.Qty;
+                if (qty < 1) continue;
+
+                item.Qty = 1;
+                for (int i = 0; i < qty; i++)
+                {
+                    separatedItems.Add(item);
+                }
+            }
+
+            return separatedItems;
         }
 
         [HttpPost]
