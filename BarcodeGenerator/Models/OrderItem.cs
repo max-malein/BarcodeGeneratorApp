@@ -17,7 +17,7 @@ namespace BarcodeGenerator.Models
 
         public string Encode()
         {
-            throw new NotImplementedException();
+            return Code128Generator.Encode(Sku);
         }
     }
 }
